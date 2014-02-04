@@ -1,9 +1,11 @@
-#!/bin/env ruby
+#!/usr/bin/env ruby
 
 require './trollop'
 require 'rubygems'
 
+cur_dir = `pwd`.chomp + "/output"
 foreman_version = ">= 0"
+cur_user = `whoami`.chomp
 
 gem 'foreman', foreman_version
 foreman = Gem.bin_path('foreman', 'foreman', foreman_version)
@@ -23,9 +25,10 @@ the upstart generation.
 EOS
     opt :relay_bin, "Relay binary.", :type => :string, :default => "/opt/stargate/bin/sg-relay"
     opt :server_jar, "Server jar.", :type => :string, :default => "/opt/stargate/libs/rtsp-proxy_0.1.0.jar"
-    opt :log_dir, "The log directory for processes.", :default => "/opt/stargate/logs"
-    opt :init_dir, "The init dir to install files to.", :default => "init_scripts"
-    opt :run_as, "The user that the processes should run as.", :default => "nobody"
+    opt :log_dir, "The log directory for processes.", :default => "#{cur_dir}/logs"
+    opt :init_dir, "The init dir to install files to.", :default => "#{cur_dir}/init_scripts"
+    opt :run_dir, "The run directory (where the pid is output to).", :default => "#{cur_dir}/run"
+    opt :run_as, "The user that the processes should run as.", :default => "#{cur_user}"
     opt :app_name, "The user that the processes should run as.", :default => "MediaGateway"
 end
 Trollop::die :init_dir, "Must be a valid path." if !opts[:init_dir] || opts[:init_dir].length == 0
@@ -37,6 +40,12 @@ File.open  ".env", "w" do |file|
 end
 
 `mkdir -p #{opts[:init_dir]}`
-`#{foreman} export -l #{opts[:log_dir]} -u #{opts[:run_as]} -a #{opts[:app_name]} upstart #{opts[:init_dir]}`
+`mkdir -p #{opts[:log_dir]}`
+`mkdir -p #{opts[:run_dir]}`
+run_foreman = "#{foreman} export -l #{opts[:log_dir]} -u #{opts[:run_as]} -a #{opts[:app_name]} -r #{opts[:run_dir]} upstart #{opts[:init_dir]}"
+puts "Running foreman: " + run_foreman
+puts `#{run_foreman}`
 
-(puts "Succesfully generated files!" if $?.exitstatus == 0) || (puts "Failed to genrate files ;_;")
+puts "Succesfully generated files!" if $?.exitstatus == 0 
+puts "Failed to genrate files ;_;" unless $?.exitstatus == 0
+
