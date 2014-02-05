@@ -1,0 +1,12 @@
+The quickest way to generate files is to do:
+./generate.sh
+
+However, this most likely will not give you what you're looking for when
+creating packages.
+
+Instead first do:
+./setup.sh
+
+Secondly, you will probably want to run ./generate.rb manually and specify
+options.  Run ./generate.rb -h for more help.
+
